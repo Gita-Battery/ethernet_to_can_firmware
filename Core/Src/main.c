@@ -218,10 +218,15 @@ int32_t TCP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 	memset(&rxJSON, '\0', rxJSON_size);
 	int32_t ret;
 	uint16_t size = 0;
-
-	switch(getSn_SR(sn))
+	uint8_t socketStatus = getSn_SR(sn);
+	switch(socketStatus)
 	{
 		case SOCK_ESTABLISHED :
+			if (wizphy_getphylink() == PHY_LINK_OFF)
+			{
+				close(sn);
+				return;
+			}
 			if(getSn_IR(sn) & Sn_IR_CON)
 			{
 				setSn_IR(sn, Sn_IR_CON);
@@ -263,17 +268,25 @@ int32_t TCP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 			}
 			break;
 		case SOCK_CLOSE_WAIT :
-			if((ret = disconnect(sn)) != SOCK_OK) return ret;
+			if((ret = disconnect(sn)) != SOCK_OK)
+			{
+				return ret;
+			}
 			break;
 		case SOCK_INIT :
-			if( (ret = listen(sn)) != SOCK_OK) return ret;
+			if ( (ret = listen(sn)) != SOCK_OK)
+			{
+				return ret;
+			}
 			break;
 		case SOCK_CLOSED:
-			if((ret = socket(sn, Sn_MR_TCP, port, 0x00)) != sn) return ret;
+			if ((ret = socket(sn, Sn_MR_TCP, port, 0x00)) != sn) {
+				return ret;
+			}
 			break;
 		default:
 			break;
-   }
+	}
    return 1;
 }
 
