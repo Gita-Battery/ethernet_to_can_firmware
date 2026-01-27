@@ -57,6 +57,7 @@
 #define rxJSON_size 		200
 #define txJSON_size 		200
 
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -91,6 +92,9 @@ uint8_t connection_is_established = 0;
 uint32_t t1 = 0;
 uint32_t t2 = 0;
 
+// Add this variable to track LED timing
+uint32_t led2_off_timestamp, led3_off_timestamp= 0;
+const uint32_t LED_BLINK_DURATION = 20; // Duration of blink in milliseconds
 
 /* USER CODE END PV */
 
@@ -144,6 +148,14 @@ void Ethernet_Init() {
 
 int32_t UDP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 {
+	if (HAL_GetTick() > led2_off_timestamp) {
+		HAL_GPIO_WritePin(LED_RX_GPIO_Port, LED_RX_Pin, GPIO_PIN_RESET);
+	}
+
+	if (HAL_GetTick() > led3_off_timestamp) {
+		HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_RESET);
+	}
+
 	memset(&txJSON, '\0', txJSON_size);
 	memset(&rxJSON, '\0', rxJSON_size);
 	int32_t ret;
@@ -163,6 +175,8 @@ int32_t UDP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 				pRxHeader.StdId, pRxHeader.DLC, RsTxData[0], RsTxData[1], RsTxData[2], RsTxData[3], RsTxData[4], RsTxData[5], RsTxData[6], RsTxData[7]);
 
 				sendto(sn, txJSON, (strcspn((char*)txJSON, "}") + 1), destip, 56801);
+				HAL_GPIO_WritePin(LED_RX_GPIO_Port, LED_RX_Pin, GPIO_PIN_SET);
+        		led2_off_timestamp = HAL_GetTick() + LED_BLINK_DURATION;
 				CanMessageReceived = 0;
 				return 1;
 			}
@@ -194,7 +208,9 @@ int32_t UDP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 							}
 							is_ping = False;
 							HAL_CAN_AddTxMessage(&hcan, &pTxHeader, CanSendArray, &TxMailbox);
-							HAL_GPIO_TogglePin(LED_3_GPIO_Port, LED_3_Pin);
+
+							HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
+							led3_off_timestamp = HAL_GetTick() + LED_BLINK_DURATION;
 //							if(pTxHeader.StdId == 0x200 && CanSendArray[0] == 0x12)
 //							{
 //								for (int i = 1; i < 32; i++) // Ping first 32 devices
