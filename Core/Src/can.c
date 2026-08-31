@@ -44,15 +44,15 @@ void MX_CAN_Init(void)
 
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 8;
+  hcan.Init.Prescaler = 36;
   hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan.Init.TimeSeg1 = CAN_BS1_15TQ;
-  hcan.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
   hcan.Init.TimeTriggeredMode = DISABLE;
   hcan.Init.AutoBusOff = DISABLE;
   hcan.Init.AutoWakeUp = DISABLE;
-  hcan.Init.AutoRetransmission = ENABLE;
+  hcan.Init.AutoRetransmission = DISABLE;
   hcan.Init.ReceiveFifoLocked = DISABLE;
   hcan.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan) != HAL_OK)
@@ -68,14 +68,14 @@ void MX_CAN_Init(void)
 
   //filter one (stack light blink)
 
-  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0; //set fifo assignment
-//   sFilterConfig.FilterIdHigh = 0x245 << 5; //the ID that the filter looks for (switch this for the other microcontroller)
-  sFilterConfig.FilterIdHigh = 0xC8 << 5;
-  sFilterConfig.FilterIdLow = 0;
-  sFilterConfig.FilterMaskIdHigh = 0xC8;
+  sFilterConfig.FilterFIFOAssignment = CAN_FILTER_FIFO0; //set fifo assignment
+  // sFilterConfig.FilterIdHigh = 0x245 << 5; //the ID that the filter looks for (switch this for the other microcontroller)
+  sFilterConfig.FilterIdHigh = 0;
+	sFilterConfig.FilterIdLow = 0;
+  sFilterConfig.FilterMaskIdHigh = 0;
   sFilterConfig.FilterMaskIdLow = 0;
   sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT; //set filter scale
-  sFilterConfig.FilterActivation = CAN_FILTER_ENABLE;
+  sFilterConfig.FilterActivation = ENABLE;
 
   HAL_CAN_ConfigFilter(&hcan, &sFilterConfig); //configure CAN filter
   HAL_CAN_Start(&hcan); //start CAN

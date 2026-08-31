@@ -128,8 +128,8 @@ void StartEthernetHandlerTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-//	UDP_Loop(SOCKET_NUMBER, gDATABUF, UDP_PORT);
-    TCP_Loop(SOCKET_NUMBER, gDATABUF, TCP_PORT);
+	  UDP_Loop(SOCKET_NUMBER, gDATABUF, UDP_PORT);
+    // TCP_Loop(SOCKET_NUMBER, gDATABUF, TCP_PORT);
     osDelay(1);
   }
   /* USER CODE END StartEthernetHandlerTask */
