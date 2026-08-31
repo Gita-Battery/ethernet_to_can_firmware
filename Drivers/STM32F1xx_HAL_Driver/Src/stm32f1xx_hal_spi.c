@@ -970,12 +970,6 @@ HAL_StatusTypeDef HAL_SPI_Receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint1
     return HAL_BUSY;
   }
 
-  if (hspi->State != HAL_SPI_STATE_READY)
-  {
-    errorcode = HAL_BUSY;
-    goto error;
-  }
-
   if ((hspi->Init.Mode == SPI_MODE_MASTER) && (hspi->Init.Direction == SPI_DIRECTION_2LINES))
   {
     hspi->State = HAL_SPI_STATE_BUSY_RX;
@@ -1528,13 +1522,6 @@ HAL_StatusTypeDef HAL_SPI_Receive_IT(SPI_HandleTypeDef *hspi, uint8_t *pData, ui
   if (hspi->State != HAL_SPI_STATE_READY)
   {
     return HAL_BUSY;
-  }
-
-
-  if (hspi->State != HAL_SPI_STATE_READY)
-  {
-    errorcode = HAL_BUSY;
-    goto error;
   }
 
   if ((hspi->Init.Direction == SPI_DIRECTION_2LINES) && (hspi->Init.Mode == SPI_MODE_MASTER))
