@@ -57,6 +57,7 @@
 #define rxJSON_size 		200
 #define txJSON_size 		200
 
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -91,6 +92,9 @@ uint8_t connection_is_established = 0;
 uint32_t t1 = 0;
 uint32_t t2 = 0;
 
+// Add this variable to track LED timing
+uint32_t led2_off_timestamp, led3_off_timestamp= 0;
+const uint32_t LED_BLINK_DURATION = 20; // Duration of blink in milliseconds
 
 /* USER CODE END PV */
 
@@ -144,6 +148,14 @@ void Ethernet_Init() {
 
 int32_t UDP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 {
+	if (HAL_GetTick() > led2_off_timestamp) {
+		HAL_GPIO_WritePin(LED_RX_GPIO_Port, LED_RX_Pin, GPIO_PIN_RESET);
+	}
+
+	if (HAL_GetTick() > led3_off_timestamp) {
+		HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_RESET);
+	}
+
 	memset(&txJSON, '\0', txJSON_size);
 	memset(&rxJSON, '\0', rxJSON_size);
 	int32_t ret;
@@ -163,6 +175,8 @@ int32_t UDP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 				pRxHeader.StdId, pRxHeader.DLC, RsTxData[0], RsTxData[1], RsTxData[2], RsTxData[3], RsTxData[4], RsTxData[5], RsTxData[6], RsTxData[7]);
 
 				sendto(sn, txJSON, (strcspn((char*)txJSON, "}") + 1), destip, 56801);
+				HAL_GPIO_WritePin(LED_RX_GPIO_Port, LED_RX_Pin, GPIO_PIN_SET);
+        		led2_off_timestamp = HAL_GetTick() + LED_BLINK_DURATION;
 				CanMessageReceived = 0;
 				return 1;
 			}
@@ -194,8 +208,20 @@ int32_t UDP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
 							}
 							is_ping = False;
 							HAL_CAN_AddTxMessage(&hcan, &pTxHeader, CanSendArray, &TxMailbox);
-							HAL_GPIO_TogglePin(LED_3_GPIO_Port, LED_3_Pin);
 
+							HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
+							led3_off_timestamp = HAL_GetTick() + LED_BLINK_DURATION;
+//							if(pTxHeader.StdId == 0x200 && CanSendArray[0] == 0x12)
+//							{
+//								for (int i = 1; i < 32; i++) // Ping first 32 devices
+//								{
+//									is_ping = True;
+//									pTxHeader.StdId = 512 + i;
+//									HAL_CAN_AddTxMessage(&hcan, &pTxHeader, CanSendArray, &TxMailbox);
+//									HAL_Delay(1);
+//								}
+//								break;
+//							}
 						}
 					}
 				}
@@ -284,6 +310,7 @@ int32_t TCP_Loop(uint8_t sn, uint8_t* buf, uint16_t port)
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -315,12 +342,13 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */
   osKernelStart();
   /* We should never get here as control is now taken by the scheduler */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -394,7 +422,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM4) {
+  if (htim->Instance == TIM4)
+  {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
@@ -416,8 +445,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

@@ -1,58 +1,53 @@
-# Prerequisites
-*.d
-
-# Object files
+# --- Build directories ---
+build/
+cmake-build-*/
+out/
 *.o
-*.ko
 *.obj
 *.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
 *.hex
+*.bin
+*.map
+*.lst
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# --- CMake cache and files ---
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-#VS Code
+# --- IDE-specific ---
+# VSCode
 .vscode/
+# CLion / JetBrains
+.idea/
+# Eclipse
+.settings/
+# STM32CubeIDE
+*.settings
+*.launch
 
-# Debug
-Debug/
+# --- STM32CubeMX ---
+# Generated report and backup files
+*.ioc-backup
+*.ioc-bak
+*.ioc-bkp
+*.tmp
+
+# Optional: ignore CubeMX generated source if you regenerate every time
+# Middlewares/
+# Drivers/
+
+# --- OS-specific ---
+# macOS
+.DS_Store
+.AppleDouble
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+/Debug/
