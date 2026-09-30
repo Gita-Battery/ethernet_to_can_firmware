@@ -2,7 +2,7 @@
 CAD.formats=
 CAD.pinconfig=
 CAD.provider=
-CAN.ABOM=DISABLE
+CAN.ABOM=ENABLE
 CAN.AWUM=DISABLE
 CAN.BS1=CAN_BS1_2TQ
 CAN.CalculateBaudRate=250000

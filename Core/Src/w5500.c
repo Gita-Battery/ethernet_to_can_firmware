@@ -53,6 +53,7 @@
 //*****************************************************************************
 //#include <stdio.h>
 #include "w5500.h"
+#include "eth_io.h"
 
 #define _W5500_SPI_VDM_OP_          0x00
 #define _W5500_SPI_FDM_OP_LEN1_     0x01
@@ -185,39 +186,33 @@ void     WIZCHIP_WRITE_BUF(uint32_t AddrSel, uint8_t* pBuf, uint16_t len)
 }
 
 
-uint16_t getSn_TX_FSR(uint8_t sn)
+/* These 16-bit hardware counters may change between byte reads. Never spin
+ * forever on an unstable counter or a disconnected SPI bus. */
+static uint16_t read_stable_size(uint32_t address)
 {
-   uint16_t val=0,val1=0;
-
-   do
-   {
-      val1 = WIZCHIP_READ(Sn_TX_FSR(sn));
-      val1 = (val1 << 8) + WIZCHIP_READ(WIZCHIP_OFFSET_INC(Sn_TX_FSR(sn),1));
-      if (val1 != 0)
-      {
-        val = WIZCHIP_READ(Sn_TX_FSR(sn));
-        val = (val << 8) + WIZCHIP_READ(WIZCHIP_OFFSET_INC(Sn_TX_FSR(sn),1));
+   uint32_t started = EthIo_Now();
+   for (;;) {
+      uint16_t first = WIZCHIP_READ(address);
+      first = (first << 8) | WIZCHIP_READ(WIZCHIP_OFFSET_INC(address, 1));
+      uint16_t second = WIZCHIP_READ(address);
+      second = (second << 8) | WIZCHIP_READ(WIZCHIP_OFFSET_INC(address, 1));
+      if (EthIo_Failed()) return 0;
+      if (first == second) return first;
+      if (!EthIo_Wait(started, ETH_COMMAND_TIMEOUT_MS)) {
+         EthIo_LatchFault();
+         return 0;
       }
-   }while (val != val1);
-   return val;
+   }
 }
 
+uint16_t getSn_TX_FSR(uint8_t sn)
+{
+   return read_stable_size(Sn_TX_FSR(sn));
+}
 
 uint16_t getSn_RX_RSR(uint8_t sn)
 {
-   uint16_t val=0,val1=0;
-
-   do
-   {
-      val1 = WIZCHIP_READ(Sn_RX_RSR(sn));
-      val1 = (val1 << 8) + WIZCHIP_READ(WIZCHIP_OFFSET_INC(Sn_RX_RSR(sn),1));
-      if (val1 != 0)
-      {
-        val = WIZCHIP_READ(Sn_RX_RSR(sn));
-        val = (val << 8) + WIZCHIP_READ(WIZCHIP_OFFSET_INC(Sn_RX_RSR(sn),1));
-      }
-   }while (val != val1);
-   return val;
+   return read_stable_size(Sn_RX_RSR(sn));
 }
 
 void wiz_send_data(uint8_t sn, uint8_t *wizdata, uint16_t len)
