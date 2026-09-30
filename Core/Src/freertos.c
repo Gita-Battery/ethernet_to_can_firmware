@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bridge.h"
 
 /* USER CODE END Includes */
 
@@ -35,10 +36,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SOCKET_NUMBER 	0
-#define TCP_PORT		56800
-#define UDP_PORT		56800
-#define UDP_BUF_SIZE   	2048
 
 /* USER CODE END PD */
 
@@ -49,11 +46,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-extern void 	Ethernet_Init(void);
-extern int32_t 	UDP_Loop(uint8_t sn, uint8_t* buf, uint16_t port);
-extern int32_t	TCP_Loop(uint8_t sn, uint8_t* buf, uint16_t port);
-
-uint8_t gDATABUF[UDP_BUF_SIZE];
 
 /* USER CODE END Variables */
 /* Definitions for ethernetHandler */
@@ -104,6 +96,7 @@ void MX_FREERTOS_Init(void) {
   ethernetHandlerHandle = osThreadNew(StartEthernetHandlerTask, NULL, &ethernetHandler_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
+  if (ethernetHandlerHandle == NULL) Error_Handler();
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -123,13 +116,12 @@ void MX_FREERTOS_Init(void) {
 void StartEthernetHandlerTask(void *argument)
 {
   /* USER CODE BEGIN StartEthernetHandlerTask */
-	Ethernet_Init();
-
-  /* Infinite loop */
-  for(;;)
+  Bridge_Init();
+  for (;;)
   {
-	  UDP_Loop(SOCKET_NUMBER, gDATABUF, UDP_PORT);
-    // TCP_Loop(SOCKET_NUMBER, gDATABUF, TCP_PORT);
+    Bridge_Step();
+    if ((bridge_diagnostics.task_iterations % 1000U) == 0U)
+      bridge_diagnostics.stack_free_bytes = uxTaskGetStackHighWaterMark(NULL) * sizeof(StackType_t);
     osDelay(1);
   }
   /* USER CODE END StartEthernetHandlerTask */

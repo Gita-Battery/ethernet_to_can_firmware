@@ -21,13 +21,6 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-CAN_TxHeaderTypeDef pTxHeader;
-CAN_RxHeaderTypeDef pRxHeader;
-CAN_FilterTypeDef sFilterConfig;
-uint32_t TxMailbox;
-
-uint8_t CanSendArray[8],CanReceiveArray[8];
-
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;
@@ -50,7 +43,7 @@ void MX_CAN_Init(void)
   hcan.Init.TimeSeg1 = CAN_BS1_2TQ;
   hcan.Init.TimeSeg2 = CAN_BS2_1TQ;
   hcan.Init.TimeTriggeredMode = DISABLE;
-  hcan.Init.AutoBusOff = DISABLE;
+  hcan.Init.AutoBusOff = ENABLE;
   hcan.Init.AutoWakeUp = DISABLE;
   hcan.Init.AutoRetransmission = DISABLE;
   hcan.Init.ReceiveFifoLocked = DISABLE;
@@ -60,26 +53,21 @@ void MX_CAN_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN_Init 2 */
-  // Can Filter Config
-  pTxHeader.DLC = 8; //give message with fix size
-  pTxHeader.IDE = CAN_ID_STD; //set identifier to standard
-  pTxHeader.RTR = CAN_RTR_DATA; //set data type to remote transmission request?
-  pTxHeader.StdId = 0x301; //define a standard identifier, used for message identification by filters (switch this for the other microcontroller)
-
-  //filter one (stack light blink)
-
+  CAN_FilterTypeDef sFilterConfig = {0};
   sFilterConfig.FilterFIFOAssignment = CAN_FILTER_FIFO0; //set fifo assignment
-  // sFilterConfig.FilterIdHigh = 0x245 << 5; //the ID that the filter looks for (switch this for the other microcontroller)
   sFilterConfig.FilterIdHigh = 0;
-	sFilterConfig.FilterIdLow = 0;
+  sFilterConfig.FilterIdLow = 0;
   sFilterConfig.FilterMaskIdHigh = 0;
   sFilterConfig.FilterMaskIdLow = 0;
   sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT; //set filter scale
   sFilterConfig.FilterActivation = ENABLE;
 
-  HAL_CAN_ConfigFilter(&hcan, &sFilterConfig); //configure CAN filter
-  HAL_CAN_Start(&hcan); //start CAN
-  HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING); //enable interrupts
+  if (HAL_CAN_ConfigFilter(&hcan, &sFilterConfig) != HAL_OK ||
+      HAL_CAN_Start(&hcan) != HAL_OK ||
+      HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   /* USER CODE END CAN_Init 2 */
 
